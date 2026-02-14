@@ -1,29 +1,30 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
 /* eslint-disable jsx-a11y/control-has-associated-label */
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { UserWarning } from './UserWarning';
 import { USER_ID } from './api/todos';
-import { useState } from 'react';
 import { Todo } from './types/Todo';
 import { getTodos } from './api/todos';
+import { Filter } from './types/Filter';
+import { ErrorMessage } from './types/ErrorMessage';
 
 export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [error, setError] = useState<string>('');
-  const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all');
+  const [filter, setFilter] = useState<Filter>(Filter.All);
 
-  const loadtodos = async () => {
+  const loadTodos = async () => {
     try {
       const data = await getTodos();
 
       setTodos(data);
     } catch (err) {
-      setError('Unable to load todos');
+      setError(ErrorMessage.LoadTodos);
     }
   };
 
   useEffect(() => {
-    loadtodos();
+    loadTodos();
   }, []);
 
   useEffect(() => {
@@ -44,10 +45,12 @@ export const App: React.FC = () => {
 
   const visibleTodos = todos.filter(todo => {
     switch (filter) {
-      case 'active':
+      case Filter.Active:
         return !todo.completed;
-      case 'completed':
+
+      case Filter.Completed:
         return todo.completed;
+
       default:
         return true;
     }
@@ -62,14 +65,12 @@ export const App: React.FC = () => {
 
       <div className="todoapp__content">
         <header className="todoapp__header">
-          {/* this button should have `active` class only if all todos are completed */}
           <button
             type="button"
             className={`todoapp__toggle-all ${allCompleted ? 'active' : ''}`}
             data-cy="ToggleAllButton"
           />
 
-          {/* Add a todo on form submit */}
           <form>
             <input
               data-cy="NewTodoField"
@@ -125,21 +126,24 @@ export const App: React.FC = () => {
               {todos.filter(todo => !todo.completed).length} items left
             </span>
 
-            {/* Active link should have the 'selected' class */}
             <nav className="filter" data-cy="Filter">
               <a
                 data-cy="FilterLinkAll"
                 href="#/"
-                className={`filter__link ${filter === 'all' ? 'selected' : ''}`}
-                onClick={() => setFilter('all')}
+                className={`filter__link ${
+                  filter === Filter.All ? 'selected' : ''
+                }`}
+                onClick={() => setFilter(Filter.All)}
               >
                 All
               </a>
 
               <a
                 href="#/active"
-                className={`filter__link ${filter === 'active' ? 'selected' : ''}`}
-                onClick={() => setFilter('active')}
+                className={`filter__link ${
+                  filter === Filter.Active ? 'selected' : ''
+                }`}
+                onClick={() => setFilter(Filter.Active)}
                 data-cy="FilterLinkActive"
               >
                 Active
@@ -148,14 +152,15 @@ export const App: React.FC = () => {
               <a
                 data-cy="FilterLinkCompleted"
                 href="#/completed"
-                className={`filter__link ${filter === 'completed' ? 'selected' : ''}`}
-                onClick={() => setFilter('completed')}
+                className={`filter__link ${
+                  filter === Filter.Completed ? 'selected' : ''
+                }`}
+                onClick={() => setFilter(Filter.Completed)}
               >
                 Completed
               </a>
             </nav>
 
-            {/* this button should be disabled if there are no completed todos */}
             <button
               type="button"
               className="todoapp__clear-completed"
@@ -168,14 +173,18 @@ export const App: React.FC = () => {
         )}
       </div>
 
-      {/* DON'T use conditional rendering to hide the notification */}
-      {/* Add the 'hidden' class to hide the message smoothly */}
       <div
         data-cy="ErrorNotification"
-        className={`notification is-danger is-light has-text-weight-normal ${error ? '' : 'hidden'}`}
+        className={`notification is-danger is-light has-text-weight-normal ${
+          error ? '' : 'hidden'
+        }`}
       >
-        <button data-cy="HideErrorButton" type="button" className="delete" />
-        {/* show only one message at a time */}
+        <button
+          data-cy="HideErrorButton"
+          type="button"
+          className="delete"
+          onClick={() => setError('')}
+        />
         {error}
       </div>
     </div>
